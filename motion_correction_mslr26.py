@@ -567,17 +567,20 @@ def warp1(img,flow,mps,complex=False):
     grid = grid.type(torch.FloatTensor)
     new_locs=grid.cuda()+flow
     shape=(mps.shape[1],mps.shape[2],mps.shape[3])
-  #  for i in range(len(shape)):
-  #      new_locs[:,i,...] = 2*(new_locs[:,i,...]/(shape[i]-1) - 0.5)
+    for i in range(len(shape)):
+        new_locs[:,i,...] = 2*(new_locs[:,i,...]/(shape[i]-1) - 0.5)
     new_locs = new_locs.permute(0, 2, 3, 4, 1) 
-   # new_locs = new_locs[..., [2,1,0]]
-    new_locsa = new_locs[..., [0,1,2]]
+    new_locs = new_locs[..., [2,1,0]]
+   # new_locsa = new_locs[..., [0,1,2]]
     if complex==True:
-        ima_real=grid_pull(torch.squeeze(torch.real(img)),torch.squeeze(new_locsa),interpolation=3,bound='zero',extrapolate=False,prefilter=True)
-        ima_imag=grid_pull(torch.squeeze(torch.imag(img)),torch.squeeze(new_locsa),interpolation=3,bound='zero',extrapolate=False,prefilter=True)
+       # ima_real=grid_pull(torch.squeeze(torch.real(img)),torch.squeeze(new_locsa),interpolation=3,bound='zero',extrapolate=False,prefilter=True)
+       # ima_imag=grid_pull(torch.squeeze(torch.imag(img)),torch.squeeze(new_locsa),interpolation=3,bound='zero',extrapolate=False,prefilter=True)
+        ima_real=torch.nn.functional.grid_sample(torch.real(img), new_locs, mode='bilinear', padding_mode='reflection', align_corners=True)
+        ima_imag=torch.nn.functional.grid_sample(torch.imag(img), new_locs, mode='bilinear', padding_mode='reflection', align_corners=True)
         im_out=torch.complex(ima_real,ima_imag)
     else:
-        im_out=grid_pull(torch.squeeze((img)),torch.squeeze(new_locsa),interpolation=3,bound='zero',extrapolate=False,prefilter=True)
+        im_out=torch.nn.functional.grid_sample((img), new_locs, mode='bilinear', padding_mode='reflection', align_corners=True)
+       # im_out=grid_pull(torch.squeeze((img)),torch.squeeze(new_locsa),interpolation=3,bound='zero',extrapolate=False,prefilter=True)
      #ima_real=torch.nn.functional.grid_sample(torch.real(img), new_locs, mode='bilinear', padding_mode='reflection', align_corners=True)
      #ima_imag=torch.nn.functional.grid_sample(torch.imag(img), new_locs, mode='bilinear', padding_mode='reflection', align_corners=True)
     #im_out=torch.complex(ima_real,ima_imag)
